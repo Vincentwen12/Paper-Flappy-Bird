@@ -4,6 +4,7 @@ import { useI18n } from "@/i18n";
 import { GhostButton } from "@/components/GhostButton";
 import { PaperTitle } from "@/components/PaperTitle";
 import { PreviewBird } from "@/components/PreviewBird";
+import { FitText } from "@/components/FitText";
 import { useProfileStore } from "@/store/profileStore";
 import { findSkin } from "@/data/skins";
 import { Sparkles, Trophy, Settings as SettingsIcon, BookHeart, Store, Gift } from "lucide-react";
@@ -57,7 +58,7 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <Trophy className="w-3.5 h-3.5 text-mist-600" />
             <span>{profile.bestScore}</span>
-            <span className="text-ink-50/60">最高分</span>
+            <span className="text-ink-50/60">{t.common.bestScore}</span>
           </div>
         </div>
 
@@ -72,24 +73,24 @@ export default function Home() {
             {t.home.begin}
           </GhostButton>
 
-          <div className="grid grid-cols-4 gap-3 w-full pt-2">
+          <div className="grid grid-cols-4 gap-2 w-full pt-2">
             <GhostButton
               size="sm"
               variant="secondary"
               onClick={() => navigate("/collection")}
-              icon={<BookHeart className="w-3.5 h-3.5" />}
-              className="w-full"
+              icon={<BookHeart className="w-3 h-3 flex-shrink-0" />}
+              className="w-full px-1.5 py-2"
             >
-              {t.home.collection}
+              <FitText baseSize={12} minSize={8}>{t.home.collection}</FitText>
             </GhostButton>
             <GhostButton
               size="sm"
               variant="secondary"
               onClick={() => navigate("/shop")}
-              icon={<Store className="w-3.5 h-3.5" />}
-              className="w-full relative"
+              icon={<Store className="w-3 h-3 flex-shrink-0" />}
+              className="w-full relative px-1.5 py-2"
             >
-              {t.home.shop}
+              <FitText baseSize={12} minSize={8}>{t.home.shop}</FitText>
               {completedTasks > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-sakura-600 text-[8px] text-paper-50 font-sans flex items-center justify-center">
                   {completedTasks}
@@ -100,19 +101,19 @@ export default function Home() {
               size="sm"
               variant="secondary"
               onClick={() => navigate("/leaderboard")}
-              icon={<Trophy className="w-3.5 h-3.5" />}
-              className="w-full"
+              icon={<Trophy className="w-3 h-3 flex-shrink-0" />}
+              className="w-full px-1.5 py-2"
             >
-              {t.home.leaderboard}
+              <FitText baseSize={12} minSize={8}>{t.home.leaderboard}</FitText>
             </GhostButton>
             <GhostButton
               size="sm"
               variant="secondary"
               onClick={() => navigate("/settings")}
-              icon={<SettingsIcon className="w-3.5 h-3.5" />}
-              className="w-full"
+              icon={<SettingsIcon className="w-3 h-3 flex-shrink-0" />}
+              className="w-full px-1.5 py-2"
             >
-              {t.home.settings}
+              <FitText baseSize={12} minSize={8}>{t.home.settings}</FitText>
             </GhostButton>
           </div>
         </div>
