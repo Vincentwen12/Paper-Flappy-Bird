@@ -6,8 +6,10 @@ import { useGameStore } from "@/store/gameStore";
 import { useProfileStore } from "@/store/profileStore";
 import { findPowerUp } from "@/data/powerUps";
 import { Audio } from "@/game/audio/AudioManager";
+import { useI18n } from "@/i18n";
 
 export default function Game() {
+  const { t, powerUpName } = useI18n();
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
@@ -135,7 +137,7 @@ export default function Game() {
                   className="inline-block w-2 h-2 rounded-full"
                   style={{ backgroundColor: findPowerUp(activePowerUp.kind).color }}
                 />
-                <span>{findPowerUp(activePowerUp.kind).name}</span>
+                <span>{powerUpName(activePowerUp.kind)}</span>
                 <span className="font-mono text-ink-50">
                   {activePowerUp.remaining.toFixed(1)}s
                 </span>
@@ -171,7 +173,7 @@ export default function Game() {
         {/* Combo 提示 */}
         {combo > 1 && phase === "playing" && (
           <div className="absolute top-16 left-3 font-serif text-sakura-600 text-xs tracking-widest">
-            ×{combo} 连击
+            ×{combo} {t.game.combo}
           </div>
         )}
 
@@ -179,10 +181,10 @@ export default function Game() {
         {phase === "ready" && (
           <div className="absolute inset-0 flex flex-col items-center justify-end pb-12 pointer-events-none">
             <div className="font-display text-ink-400 text-3xl tracking-[0.3em] text-emboss mb-3">
-              READY
+              {t.game.ready}
             </div>
             <div className="font-serif italic text-ink-50 text-sm tracking-widest">
-              轻点 / 空格 起飞
+              {t.game.readyHint}
             </div>
           </div>
         )}
@@ -191,7 +193,7 @@ export default function Game() {
         {showPause && (
           <div className="absolute inset-0 bg-paper-100/85 backdrop-blur-sm flex flex-col items-center justify-center gap-6 page-enter">
             <div className="font-display text-4xl tracking-[0.4em] text-ink-400 text-emboss">
-              PAUSED
+              {t.game.paused}
             </div>
             <div className="flex flex-col gap-3 w-56">
               <button
@@ -201,23 +203,23 @@ export default function Game() {
                 }}
                 className="btn-lift px-6 py-3 border border-ink-100 bg-paper-50 font-serif tracking-widest text-ink-400 rounded-sm flex items-center justify-center gap-2 shadow-paper"
               >
-                <Play className="w-4 h-4" /> 继续
+                <Play className="w-4 h-4" /> {t.common.continue}
               </button>
               <button
                 onClick={handleRestart}
                 className="btn-lift px-6 py-3 border border-paper-300 bg-paper-50 font-serif tracking-widest text-ink-200 rounded-sm flex items-center justify-center gap-2 shadow-paper"
               >
-                <RotateCcw className="w-4 h-4" /> 重新开始
+                <RotateCcw className="w-4 h-4" /> {t.game.restart}
               </button>
               <button
                 onClick={handleHome}
                 className="btn-lift px-6 py-3 border border-transparent text-ink-50 font-serif tracking-widest hover:border-paper-300 rounded-sm flex items-center justify-center gap-2"
               >
-                <Home className="w-4 h-4" /> 返回主菜单
+                <Home className="w-4 h-4" /> {t.game.home}
               </button>
             </div>
             <div className="font-mono text-xs text-ink-50 tracking-widest mt-2">
-              当前 {score} · 最高 {bestScore}
+              {t.game.currentScore} {score} · 最高 {bestScore}
             </div>
           </div>
         )}

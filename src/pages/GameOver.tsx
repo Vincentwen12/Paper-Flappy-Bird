@@ -5,12 +5,14 @@ import { useGameStore } from "@/store/gameStore";
 import { useProfileStore } from "@/store/profileStore";
 import { Trophy, Sparkles, ArrowRight, Home, RotateCcw } from "lucide-react";
 import { useMemo, useEffect, useState } from "react";
+import { useI18n } from "@/i18n";
 
 export default function GameOver() {
   const navigate = useNavigate();
   const { score, starsEarned, combo, bestScore } = useGameStore();
   const profile = useProfileStore((s) => s.profile);
   const [showConfetti, setShowConfetti] = useState(false);
+  const { t } = useI18n();
 
   const isNewRecord = useMemo(
     () => score > 0 && score >= profile.bestScore,
@@ -32,10 +34,10 @@ export default function GameOver() {
 
       <PaperCard className="w-full max-w-md p-10 flex flex-col items-center gap-6 bg-paper-50">
         <div className="text-ink-50 tracking-[0.5em] text-[10px] font-sans uppercase">
-          {isNewRecord ? "A new chapter" : "A quiet ending"}
+          {isNewRecord ? t.gameOver.subtitleNew : t.gameOver.subtitleEnd}
         </div>
         <div className="font-display text-4xl tracking-[0.3em] text-ink-400 text-emboss">
-          {isNewRecord ? "NEW RECORD" : "GAME OVER"}
+          {isNewRecord ? t.gameOver.newRecord : t.gameOver.gameOver}
         </div>
         <div className="h-px w-20 bg-paper-300" />
 
@@ -45,31 +47,31 @@ export default function GameOver() {
             {score}
           </div>
           <div className="text-ink-50 font-serif tracking-widest text-xs uppercase">
-            得分 · Score
+            {t.gameOver.score}
           </div>
         </div>
 
         {/* 数据卡 */}
         <div className="grid grid-cols-3 gap-3 w-full">
           <DataCell
-            label="最高"
+            label={t.gameOver.best}
             value={Math.max(score, bestScore)}
             icon={<Trophy className="w-3.5 h-3.5 text-mist-600" />}
           />
           <DataCell
-            label="星芒"
+            label={t.gameOver.stars}
             value={starsEarned}
             icon={<Sparkles className="w-3.5 h-3.5 text-sakura-600" />}
           />
           <DataCell
-            label="连击"
+            label={t.gameOver.combo}
             value={combo}
             icon={<span className="text-[10px] text-matcha-600">×N</span>}
           />
         </div>
 
         <div className="font-serif italic text-ink-50 text-sm tracking-widest text-center">
-          “折痕是飞翔的来路”
+          “{t.gameOver.quote}”
         </div>
 
         {/* 操作 */}
@@ -80,7 +82,7 @@ export default function GameOver() {
             icon={<Home className="w-3.5 h-3.5" />}
             className="w-full"
           >
-            主菜单
+            {t.gameOver.mainMenu}
           </GhostButton>
           <GhostButton
             variant="primary"
@@ -88,7 +90,7 @@ export default function GameOver() {
             icon={<RotateCcw className="w-3.5 h-3.5" />}
             className="w-full"
           >
-            再来
+            {t.gameOver.playAgain}
             <ArrowRight className="w-3.5 h-3.5 ml-1" />
           </GhostButton>
         </div>

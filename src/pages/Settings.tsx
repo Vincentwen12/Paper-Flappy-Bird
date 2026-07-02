@@ -4,10 +4,13 @@ import { PaperTitle } from "@/components/PaperTitle";
 import { PaperCard } from "@/components/PaperCard";
 import { GhostButton } from "@/components/GhostButton";
 import { useProfileStore } from "@/store/profileStore";
-import { ArrowLeft, Volume2, Music2, Image as ImageIcon, Trash2 } from "lucide-react";
+import { useI18n, LANG_LABELS } from "@/i18n";
+import type { Lang } from "@/i18n";
+import { ArrowLeft, Volume2, Music2, Image as ImageIcon, Trash2, Globe } from "lucide-react";
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { t, lang } = useI18n();
   const profile = useProfileStore((s) => s.profile);
   const setSetting = useProfileStore((s) => s.setSetting);
   const clearAll = useProfileStore((s) => s.clearAll);
@@ -28,25 +31,25 @@ export default function Settings() {
             icon={<ArrowLeft className="w-3.5 h-3.5" />}
             onClick={() => navigate("/")}
           >
-            返回
+            {t.common.back}
           </GhostButton>
         </div>
 
-        <PaperTitle subtitle="音频 · 画面 · 数据">设置</PaperTitle>
+        <PaperTitle subtitle={t.settings.subtitle}>{t.settings.title}</PaperTitle>
 
         {/* 音频 */}
         <PaperCard className="p-6 flex flex-col gap-5">
-          <SectionTitle>音频</SectionTitle>
+          <SectionTitle>{t.settings.audio}</SectionTitle>
           <Toggle
-            label="音效"
-            desc="跳跃、得分、拾取与失败的程序化声音"
+            label={t.settings.sound}
+            desc={t.settings.soundDesc}
             icon={<Volume2 className="w-4 h-4" />}
             value={profile.settings.soundOn}
             onChange={(v) => setSetting("soundOn", v)}
           />
           <Toggle
-            label="背景音乐"
-            desc="循环播放的和风轻钢琴琶音"
+            label={t.settings.music}
+            desc={t.settings.musicDesc}
             icon={<Music2 className="w-4 h-4" />}
             value={profile.settings.musicOn}
             onChange={(v) => setSetting("musicOn", v)}
@@ -55,12 +58,12 @@ export default function Settings() {
 
         {/* 画面 */}
         <PaperCard className="p-6 flex flex-col gap-5">
-          <SectionTitle>画面</SectionTitle>
+          <SectionTitle>{t.settings.graphics}</SectionTitle>
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 text-ink-400 font-serif tracking-widest text-sm">
                 <ImageIcon className="w-4 h-4" />
-                <span>画面质量</span>
+                <span>{t.settings.quality}</span>
               </div>
               <div className="flex gap-1">
                 {(["low", "medium", "high"] as const).map((q) => (
@@ -68,7 +71,11 @@ export default function Settings() {
                     key={q}
                     onClick={() => {
                       setSetting("quality", q);
-                      showToast(`画面 · ${q}`);
+                      showToast(
+                        `${t.settings.quality} · ${
+                          q === "low" ? t.settings.qualityLow : q === "medium" ? t.settings.qualityMed : t.settings.qualityHigh
+                        }`,
+                      );
                     }}
                     className={`px-3 py-1 text-xs font-sans tracking-widest uppercase border rounded-sm transition ${
                       profile.settings.quality === q
@@ -76,7 +83,7 @@ export default function Settings() {
                         : "border-paper-300 text-ink-50 hover:border-ink-100"
                     }`}
                   >
-                    {q}
+                    {q === "low" ? t.settings.qualityLow : q === "medium" ? t.settings.qualityMed : t.settings.qualityHigh}
                   </button>
                 ))}
               </div>
@@ -85,7 +92,7 @@ export default function Settings() {
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="font-serif tracking-widest text-ink-400">
-                  纸纹强度
+                  {t.settings.paperTexture}
                 </span>
                 <span className="font-mono text-ink-50">
                   {profile.settings.paperTexture}
@@ -111,22 +118,57 @@ export default function Settings() {
           </div>
         </PaperCard>
 
+        {/* 语言 */}
+        <PaperCard className="p-6 flex flex-col gap-4">
+          <SectionTitle>{t.settings.language}</SectionTitle>
+          <p className="text-ink-50 text-xs font-sans tracking-widest">
+            {t.settings.languageDesc}
+          </p>
+          <div className="grid grid-cols-4 gap-2">
+            {(Object.keys(LANG_LABELS) as Lang[]).map((l) => (
+              <button
+                key={l}
+                onClick={() => {
+                  setSetting("language", l);
+                  showToast(LANG_LABELS[l]);
+                }}
+                className={`px-3 py-2 text-xs font-serif tracking-widest border rounded-sm transition btn-lift ${
+                  lang === l
+                    ? "border-ink-400 text-ink-400 bg-paper-50"
+                    : "border-paper-300 text-ink-50 hover:border-ink-100"
+                }`}
+              >
+                {LANG_LABELS[l]}
+              </button>
+            ))}
+          </div>
+        </PaperCard>
+
         {/* 数据 */}
         <PaperCard className="p-6 flex flex-col gap-3">
-          <SectionTitle>数据</SectionTitle>
+          <SectionTitle>{t.settings.data}</SectionTitle>
           <p className="text-ink-50 text-xs font-sans tracking-widest">
-            清空所有本地数据，包括星芒、造型、主题、排行榜与设置。
+            {t.settings.dataDesc}
           </p>
           <button
             onClick={() => {
-              if (confirm("确定要清空所有数据？此操作不可撤销。")) {
+              if (confirm(
+                lang === "zh" ? "确定要清空所有数据？此操作不可撤销。" :
+                lang === "ja" ? "すべてのデータを消去しますか？この操作は元に戻せません。" :
+                lang === "ko" ? "모든 데이터를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다." :
+                lang === "es" ? "¿Eliminar todos los datos? Esta acción no se puede deshacer." :
+                lang === "fr" ? "Effacer toutes les données ? Cette action est irréversible." :
+                lang === "ru" ? "Удалить все данные? Это действие необратимо." :
+                lang === "de" ? "Alle Daten löschen? Diese Aktion kann nicht rückgängig gemacht werden." :
+                "Are you sure you want to clear all data? This action cannot be undone."
+              )) {
                 clearAll();
-                showToast("已重置");
+                showToast(t.settings.reset);
               }
             }}
             className="self-start inline-flex items-center gap-2 px-4 py-2 text-sm font-serif tracking-widest text-ink-200 border border-paper-300 rounded-sm btn-lift hover:border-ink-100 hover:text-ink-400"
           >
-            <Trash2 className="w-3.5 h-3.5" /> 清空所有数据
+            <Trash2 className="w-3.5 h-3.5" /> {t.settings.clearData}
           </button>
         </PaperCard>
 

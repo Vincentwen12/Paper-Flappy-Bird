@@ -6,6 +6,7 @@ import { GhostButton } from "@/components/GhostButton";
 import { useProfileStore } from "@/store/profileStore";
 import { EQUIPMENT, RARITY_COLORS_EQUIP, findEquipment } from "@/data/equipment";
 import { getTaskDef } from "@/data/tasks";
+import { useI18n } from "@/i18n";
 import { ArrowLeft, Check, Sparkles, Lock, Gift, ClipboardList } from "lucide-react";
 import clsx from "clsx";
 
@@ -13,21 +14,9 @@ type Tab = "equipment" | "tasks";
 type Rarity = "common" | "rare" | "epic" | "legendary";
 type EquipKind = "trail" | "shield" | "accessory";
 
-const RARITY_LABELS: Record<Rarity, string> = {
-  common: "普通",
-  rare: "稀有",
-  epic: "史诗",
-  legendary: "传说",
-};
-
-const EQUIP_LABELS: Record<EquipKind, string> = {
-  trail: "尾迹",
-  shield: "护盾",
-  accessory: "配饰",
-};
-
 export default function Shop() {
   const navigate = useNavigate();
+  const { t, equipName, equipDesc, taskTitle, taskDesc, rarityLabel } = useI18n();
   const profile = useProfileStore((s) => s.profile);
   const equipTrail = useProfileStore((s) => s.equipTrail);
   const equipShield = useProfileStore((s) => s.equipShield);
@@ -38,6 +27,12 @@ export default function Shop() {
   const [equipKind, setEquipKind] = useState<EquipKind>("trail");
   const [filter, setFilter] = useState<Rarity | "all">("all");
   const [toast, setToast] = useState<string | null>(null);
+
+  const EQUIP_LABELS: Record<EquipKind, string> = {
+    trail: t.shop.trail,
+    shield: t.shop.shield,
+    accessory: t.shop.accessory,
+  };
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -66,23 +61,23 @@ export default function Shop() {
             icon={<ArrowLeft className="w-3.5 h-3.5" />}
             onClick={() => navigate("/")}
           >
-            返回
+            {t.common.back}
           </GhostButton>
           <div className="flex items-center gap-2 text-ink-50 font-mono text-sm">
             <Sparkles className="w-3.5 h-3.5 text-sakura-600" />
             <span>{profile.totalStars}</span>
-            <span className="text-ink-50/60 text-xs">星芒</span>
+            <span className="text-ink-50/60 text-xs">{t.common.stars}</span>
           </div>
         </div>
 
-        <PaperTitle subtitle="装备 · 任务">商城</PaperTitle>
+        <PaperTitle subtitle={t.shop.subtitle}>{t.shop.title}</PaperTitle>
 
         {/* Tabs */}
         <div className="flex gap-6 border-b border-paper-300 pb-3 text-sm font-serif tracking-widest">
           {(
             [
-              { k: "equipment" as Tab, t: "装备", count: EQUIPMENT.length },
-              { k: "tasks" as Tab, t: "每日任务", count: totalTasks },
+              { k: "equipment" as Tab, t: t.shop.equipment, count: EQUIPMENT.length },
+              { k: "tasks" as Tab, t: t.shop.dailyTasks, count: totalTasks },
             ]
           ).map((x) => (
             <button
@@ -147,7 +142,7 @@ export default function Shop() {
                       : undefined
                   }
                 >
-                  {r === "all" ? "全部" : RARITY_LABELS[r]}
+                  {r === "all" ? t.collection.all : rarityLabel(r)}
                 </button>
               ))}
             </div>
@@ -168,14 +163,14 @@ export default function Shop() {
                     hover
                     onClick={() => {
                       if (!owned) {
-                        if (!canAfford) { showToast("星芒不足"); return; }
+                        if (!canAfford) { showToast(t.common.notEnoughStars); return; }
                         const ok = unlockEquipment(equip.id);
-                        showToast(ok ? `已解锁 · ${equip.name}` : "解锁失败");
+                        showToast(ok ? `${t.common.unlocked} · ${equipName(equip.id)}` : t.common.unlockFailed);
                       } else if (!equipped) {
                         if (equipKind === "trail") equipTrail(equip.id);
                         else if (equipKind === "shield") equipShield(equip.id);
                         else equipAccessory(equip.id);
-                        showToast(`已装备 · ${equip.name}`);
+                        showToast(`${t.common.equipped} · ${equipName(equip.id)}`);
                       }
                     }}
                     className="p-4 flex flex-col items-center gap-2"
@@ -185,7 +180,7 @@ export default function Shop() {
                         className="self-end text-[9px] font-sans tracking-widest px-1.5 py-0.5 rounded-sm text-paper-50"
                         style={{ backgroundColor: RARITY_COLORS_EQUIP[equip.rarity] }}
                       >
-                        {RARITY_LABELS[equip.rarity]}
+                        {rarityLabel(equip.rarity)}
                       </span>
                     )}
                     {/* 预览 */}
@@ -231,20 +226,20 @@ export default function Shop() {
                     </div>
                     <div className="flex flex-col items-center gap-0.5 w-full">
                       <div className="font-serif text-ink-400 tracking-widest text-sm text-center">
-                        {equip.name}
+                        {equipName(equip.id)}
                       </div>
                       <div className="text-ink-50 text-[10px] font-sans tracking-wide text-center leading-tight">
-                        {equip.desc}
+                        {equipDesc(equip.id)}
                       </div>
                     </div>
                     <div className="mt-auto pt-1">
                       {equipped ? (
                         <span className="inline-flex items-center gap-1 text-[10px] font-serif text-ink-400 tracking-widest border border-ink-400 rounded-sm px-2 py-0.5">
-                          <Check className="w-3 h-3" /> 已装备
+                          <Check className="w-3 h-3" /> {t.common.equipped}
                         </span>
                       ) : owned ? (
                         <span className="text-[10px] font-serif text-ink-200 tracking-widest border border-paper-300 rounded-sm px-2 py-0.5">
-                          点击装备
+                          {t.common.clickToEquip}
                         </span>
                       ) : (
                         <span className={clsx(
@@ -252,7 +247,7 @@ export default function Shop() {
                           canAfford ? "border-paper-300 text-ink-100" : "border-paper-300/50 text-ink-50/50"
                         )}>
                           <Lock className="w-3 h-3" />
-                          {equip.price === 0 ? "免费" : `${equip.price} 星芒`}
+                          {equip.price === 0 ? t.common.free : `${equip.price} ${t.common.stars}`}
                         </span>
                       )}
                     </div>
@@ -270,10 +265,10 @@ export default function Shop() {
               <PaperCard className="p-12 flex flex-col items-center gap-3">
                 <ClipboardList className="w-8 h-8 text-paper-400" strokeWidth={1.2} />
                 <div className="font-serif text-ink-50 tracking-widest text-sm">
-                  暂无任务
+                  {t.shop.noTasks}
                 </div>
                 <div className="text-ink-50/60 text-xs font-sans tracking-widest">
-                  每日任务将在次日刷新
+                  {t.shop.noTasksHint}
                 </div>
               </PaperCard>
             ) : (
@@ -287,10 +282,10 @@ export default function Shop() {
                     <div className="text-2xl flex-shrink-0">{def.icon}</div>
                     <div className="flex-1 min-w-0">
                       <div className="font-serif text-ink-400 tracking-widest text-sm">
-                        {def.title}
+                        {taskTitle(task.taskId)}
                       </div>
                       <div className="text-ink-50 text-xs font-sans tracking-wide">
-                        {def.desc}
+                        {taskDesc(task.taskId)}
                       </div>
                       {/* 进度条 */}
                       <div className="mt-2 flex items-center gap-2">
@@ -315,13 +310,13 @@ export default function Shop() {
                       </div>
                       {task.claimed ? (
                         <span className="text-[10px] text-ink-50/50 font-serif tracking-widest">
-                          已领取
+                          {t.common.claimed}
                         </span>
                       ) : task.completed ? (
                         <button
                           onClick={() => {
                             const reward = claimTaskReward(task.taskId);
-                            if (reward > 0) showToast(`领取成功！+${reward} 星芒`);
+                            if (reward > 0) showToast(`${t.common.claimSuccess}！+${reward} ${t.common.stars}`);
                           }}
                           className="btn-lift px-3 py-1 text-[10px] font-serif tracking-widest bg-sakura-600 text-paper-50 border border-sakura-600 rounded-sm hover:bg-sakura-700 transition"
                         >
@@ -330,7 +325,7 @@ export default function Shop() {
                         </button>
                       ) : (
                         <span className="text-[10px] text-ink-50/50 font-serif tracking-widest">
-                          进行中
+                          {t.common.inProgress}
                         </span>
                       )}
                     </div>

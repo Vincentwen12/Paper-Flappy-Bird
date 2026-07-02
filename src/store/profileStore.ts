@@ -40,6 +40,7 @@ export interface Profile {
     musicOn: boolean;
     quality: "low" | "medium" | "high";
     paperTexture: number;
+    language: string;
   };
 }
 
@@ -69,6 +70,7 @@ const DEFAULT_PROFILE: Profile = {
     musicOn: true,
     quality: "high",
     paperTexture: 60,
+    language: "zh",
   },
 };
 

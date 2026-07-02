@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useI18n } from "@/i18n";
 import { GhostButton } from "@/components/GhostButton";
 import { PaperTitle } from "@/components/PaperTitle";
 import { PreviewBird } from "@/components/PreviewBird";
@@ -11,6 +12,7 @@ export default function Home() {
   const navigate = useNavigate();
   const profile = useProfileStore((s) => s.profile);
 
+  const { t, lang } = useI18n();
   const skin = findSkin(profile.equippedSkin);
   const [phase, setPhase] = useState(0);
   const completedTasks = profile.dailyTasks.filter((t) => t.completed && !t.claimed).length;
@@ -28,13 +30,13 @@ export default function Home() {
       <div className="flex flex-col items-center gap-10 max-w-2xl w-full">
         <div className="relative flex flex-col items-center gap-4">
           <div className="text-ink-50 tracking-[0.6em] text-xs font-sans uppercase">
-            A paper-craft arcade
+            {t.home.subtitleEn}
           </div>
-          <PaperTitle subtitle="纸 艺 天 空 · vol.1" align="center">
+          <PaperTitle subtitle={t.home.subtitle} align="center">
             Paper Flap
           </PaperTitle>
           <div className="font-serif text-ink-50 italic text-sm tracking-widest">
-            “折一只纸鸟，让它飞过和纸的早晨”
+            {t.home.tagline}
           </div>
         </div>
 
@@ -49,7 +51,7 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-sakura-600" />
             <span>{profile.totalStars}</span>
-            <span className="text-ink-50/60">星芒</span>
+            <span className="text-ink-50/60">{t.common.stars}</span>
           </div>
           <span className="opacity-30">·</span>
           <div className="flex items-center gap-2">
@@ -67,7 +69,7 @@ export default function Home() {
             onClick={() => navigate("/game")}
             className="w-full"
           >
-            BEGIN · 开始
+            {t.home.begin}
           </GhostButton>
 
           <div className="grid grid-cols-4 gap-3 w-full pt-2">
@@ -78,7 +80,7 @@ export default function Home() {
               icon={<BookHeart className="w-3.5 h-3.5" />}
               className="w-full"
             >
-              收藏
+              {t.home.collection}
             </GhostButton>
             <GhostButton
               size="sm"
@@ -87,7 +89,7 @@ export default function Home() {
               icon={<Store className="w-3.5 h-3.5" />}
               className="w-full relative"
             >
-              商城
+              {t.home.shop}
               {completedTasks > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-sakura-600 text-[8px] text-paper-50 font-sans flex items-center justify-center">
                   {completedTasks}
@@ -101,7 +103,7 @@ export default function Home() {
               icon={<Trophy className="w-3.5 h-3.5" />}
               className="w-full"
             >
-              排行
+              {t.home.leaderboard}
             </GhostButton>
             <GhostButton
               size="sm"
@@ -110,14 +112,14 @@ export default function Home() {
               icon={<SettingsIcon className="w-3.5 h-3.5" />}
               className="w-full"
             >
-              设置
+              {t.home.settings}
             </GhostButton>
           </div>
         </div>
 
         {/* 底部信息 */}
         <div className="text-ink-50/60 text-[10px] font-sans tracking-[0.4em] mt-2 uppercase">
-          Press · SPACE / TAP to begin
+          {t.home.hint}
         </div>
       </div>
 

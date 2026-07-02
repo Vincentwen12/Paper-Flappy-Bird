@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useI18n } from "@/i18n";
 import { PaperTitle } from "@/components/PaperTitle";
 import { PaperCard } from "@/components/PaperCard";
 import { GhostButton } from "@/components/GhostButton";
@@ -7,6 +8,7 @@ import { ArrowLeft, Trophy, Trash2 } from "lucide-react";
 
 export default function Leaderboard() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const profile = useProfileStore((s) => s.profile);
   const clearLeaderboard = useProfileStore((s) => s.clearLeaderboard);
 
@@ -22,7 +24,7 @@ export default function Leaderboard() {
             icon={<ArrowLeft className="w-3.5 h-3.5" />}
             onClick={() => navigate("/")}
           >
-            返回
+            {t.common.back}
           </GhostButton>
           {lb.length > 0 && (
             <button
@@ -36,16 +38,16 @@ export default function Leaderboard() {
           )}
         </div>
 
-        <PaperTitle subtitle="Local · Top 10">排行榜</PaperTitle>
+        <PaperTitle subtitle={t.leaderboard.subtitle}>{t.leaderboard.title}</PaperTitle>
 
         {lb.length === 0 ? (
           <PaperCard className="p-12 flex flex-col items-center gap-3 bg-paper-50">
             <Trophy className="w-8 h-8 text-paper-400" strokeWidth={1.2} />
             <div className="font-serif text-ink-50 tracking-widest text-sm">
-              还没有飞行记录
+              {t.leaderboard.empty}
             </div>
             <div className="text-ink-50/60 text-xs font-sans tracking-widest">
-              Start your first paper flight
+              {t.leaderboard.emptyHint}
             </div>
             <GhostButton
               size="md"
@@ -53,7 +55,7 @@ export default function Leaderboard() {
               onClick={() => navigate("/game")}
               className="mt-4"
             >
-              开始游戏
+              {t.leaderboard.startGame}
             </GhostButton>
           </PaperCard>
         ) : (
@@ -61,10 +63,10 @@ export default function Leaderboard() {
             <table className="w-full">
               <thead>
                 <tr className="text-ink-50 text-[10px] font-sans tracking-[0.3em] uppercase">
-                  <th className="text-left px-6 py-4">名次</th>
-                  <th className="text-right px-6 py-4">得分</th>
-                  <th className="text-right px-6 py-4">星芒</th>
-                  <th className="text-right px-6 py-4">日期</th>
+                  <th className="text-left px-6 py-4">{t.leaderboard.rank}</th>
+                  <th className="text-right px-6 py-4">{t.leaderboard.score}</th>
+                  <th className="text-right px-6 py-4">{t.leaderboard.stars}</th>
+                  <th className="text-right px-6 py-4">{t.leaderboard.date}</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,7 +111,7 @@ export default function Leaderboard() {
           <div className="grid grid-cols-2 gap-3 text-center">
             <PaperCard className="p-4">
               <div className="text-ink-50 text-[10px] tracking-widest uppercase mb-1">
-                最高分
+                {t.leaderboard.bestScore}
               </div>
               <div className="font-mono text-3xl text-ink-400 font-light">
                 {Math.max(...lb.map((e) => e.score))}
@@ -117,7 +119,7 @@ export default function Leaderboard() {
             </PaperCard>
             <PaperCard className="p-4">
               <div className="text-ink-50 text-[10px] tracking-widest uppercase mb-1">
-                总星芒
+                {t.leaderboard.totalStars}
               </div>
               <div className="font-mono text-3xl text-ink-400 font-light">
                 {lb.reduce((s, e) => s + e.starsEarned, 0)}
