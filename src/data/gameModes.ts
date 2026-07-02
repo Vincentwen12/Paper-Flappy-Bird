@@ -80,7 +80,7 @@ export const GAME_MODES: GameMode[] = [
     starRate: 0.7,
     lives: 1,
     invulnAfterHit: 0,
-    unlockScore: 30,
+    unlockScore: 0,
   },
   {
     id: "precision",
@@ -112,7 +112,7 @@ export const GAME_MODES: GameMode[] = [
     starRate: 0.5,
     lives: 1,
     invulnAfterHit: 0,
-    unlockScore: 50,
+    unlockScore: 0,
   },
   {
     id: "survival",
@@ -144,7 +144,7 @@ export const GAME_MODES: GameMode[] = [
     starRate: 0.5,
     lives: 3,
     invulnAfterHit: 1.5,
-    unlockScore: 40,
+    unlockScore: 0,
   },
   {
     id: "zen",
@@ -176,7 +176,7 @@ export const GAME_MODES: GameMode[] = [
     starRate: 0.8,
     lives: -1,
     invulnAfterHit: 0,
-    unlockScore: 80,
+    unlockScore: 0,
   },
 ];
 
