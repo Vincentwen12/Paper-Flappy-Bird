@@ -1,0 +1,10 @@
+services:
+  - type: static
+    name: paper-flappy-bird
+    buildCommand: pnpm install && pnpm build
+    staticPublishPath: ./dist
+    pullRequestPreviewsEnabled: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
