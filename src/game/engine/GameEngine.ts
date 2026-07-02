@@ -4,6 +4,8 @@ import { findTheme } from "@/data/themes";
 import { findEquipment } from "@/data/equipment";
 import { POWERUPS, type PowerUpKind } from "@/data/powerUps";
 import { getTaskDef } from "@/data/tasks";
+import { getMode, type GameModeId } from "@/data/gameModes";
+import { ACHIEVEMENTS, type AchievementId } from "@/data/achievements";
 import { rand, randInt, pick, clamp } from "@/utils/random";
 import type { Theme } from "@/data/themes";
 import type { Skin } from "@/data/skins";
@@ -38,6 +40,7 @@ export interface EngineSnapshot {
   bestScore: number;
   starsEarned: number;
   combo: number;
+  mode: GameModeId;
   activePowerUp: { kind: PowerUpKind; remaining: number } | null;
 }
 
@@ -103,6 +106,13 @@ export class GameEngine {
   private musicOn = true;
   private soundOn = true;
   private textureStrength = 60;
+  // 游戏模式
+  private mode: GameModeId = "classic";
+  private lives = 1;
+  // 震屏
+  private shakeAmount = 0;
+  private shakeDecay = 0.9;
+  private shakeDuration = 0;
   // 任务进度追踪
   private trackedGameScore = 0;
   private trackedStars = 0;
@@ -163,6 +173,12 @@ export class GameEngine {
     this.soundOn = opts.soundOn;
     this.textureStrength = opts.texture;
   }
+
+  setMode(id: GameModeId) {
+    this.mode = id;
+  }
+
+  getLives(): number { return this.lives; }
 
   start() {
     this.syncFromStores();
@@ -227,6 +243,8 @@ export class GameEngine {
 
   private reset() {
     this.syncFromStores();
+    const gameMode = getMode(this.mode);
+    this.lives = gameMode.lives;
     this.particles.setPalette([
       this.theme.particleColor,
       "#fafaf7",
@@ -255,7 +273,7 @@ export class GameEngine {
     this.activeRemaining = 0;
     this.birdScaleMod = 1;
     this.slowFactor = 1;
-    this.scoreMult = 1;
+    this.scoreMult = gameMode.scoreMult;
     this.setPhase("ready");
     useGameStore.getState().setScore(0);
     useGameStore.getState().setCombo(0);
@@ -336,7 +354,8 @@ export class GameEngine {
     }
 
     // 管道移动 + 得分
-    const speed = this.config.pipeSpeed * (1 + Math.floor(this.score / 10) * 0.02);
+    const gameMode = getMode(this.mode);
+    const speed = this.config.pipeSpeed * gameMode.pipeSpeedMult * (1 + Math.floor(this.score / 10) * 0.02);
     for (const p of this.pipes) {
       p.x -= speed * dt;
       if (!p.passed && p.x + p.width < this.bird.pos.x - this.bird.radius) {
@@ -384,12 +403,12 @@ export class GameEngine {
     this.powerUpTimer += dt;
     if (this.powerUpTimer >= 6 && this.powerUps.length < 1) {
       this.powerUpTimer = 0;
-      if (Math.random() < 0.5) this.spawnPowerUp();
+      if (Math.random() < gameMode.powerUpRate) this.spawnPowerUp();
     }
     this.starTimer += dt;
     if (this.starTimer >= 2.2) {
       this.starTimer = 0;
-      if (Math.random() < 0.65) this.spawnStar();
+      if (Math.random() < gameMode.starRate) this.spawnStar();
     }
 
     // 环境纸屑
@@ -422,6 +441,12 @@ export class GameEngine {
 
     // 粒子系统
     this.particles.update(dt);
+    // 震屏衰减
+    if (this.shakeDuration > 0) {
+      this.shakeDuration -= dt;
+      this.shakeAmount *= this.shakeDecay;
+      if (this.shakeDuration <= 0) this.shakeAmount = 0;
+    }
     // 尾迹粒子
     if (this.trail && this.trail.colors && this.trail.id !== "trail-basic") {
       const trailColors = this.trail.colors;
@@ -434,14 +459,16 @@ export class GameEngine {
   }
 
   private spawnPipe() {
+    const gameMode = getMode(this.mode);
+    const gap = this.config.pipeGap * gameMode.pipeGapMult;
     const minY = 100;
-    const maxY = this.config.groundY - 100 - this.config.pipeGap;
-    const centerY = rand(minY + this.config.pipeGap / 2, maxY);
+    const maxY = this.config.groundY - 100 - gap;
+    const centerY = rand(minY + gap / 2, maxY);
     const swing = this.score >= 20 && Math.random() < 0.4;
     this.pipes.push({
       x: this.viewW + 50,
       gapY: centerY,
-      gapHeight: this.config.pipeGap,
+      gapHeight: gap,
       width: this.config.pipeWidth,
       passed: false,
       swing,
@@ -553,7 +580,7 @@ export class GameEngine {
     useGameStore.getState().setActivePowerUp(null);
     if (kind === "boat") this.birdScaleMod = 1;
     if (kind === "lantern") this.slowFactor = 1;
-    if (kind === "plane") this.scoreMult = 1;
+    if (kind === "plane") this.scoreMult = getMode(this.mode).scoreMult;
   }
 
   private checkPipeCollision() {
@@ -574,12 +601,21 @@ export class GameEngine {
         circleRectHit(this.bird.pos.x, this.bird.pos.y, r, topRect) ||
         circleRectHit(this.bird.pos.x, this.bird.pos.y, r, botRect)
       ) {
+        // 无敌中跳过
+        if (this.bird.invuln > 0) return;
         if (this.bird.hasShield) {
           // 抵消一次
           this.bird.hasShield = false;
           this.bird.invuln = 1.5;
           if (this.soundOn) Audio.shield();
           this.particles.burst(this.bird.pos.x, this.bird.pos.y, 18);
+        } else if (this.lives > 1) {
+          // 多命模式：扣血无伤
+          this.lives -= 1;
+          this.bird.invuln = 1.5;
+          this.shakeAmount = 8;
+          this.shakeDuration = 0.4;
+          if (this.soundOn) Audio.shield();
         } else {
           this.die();
         }
@@ -590,8 +626,25 @@ export class GameEngine {
 
   private die() {
     if (this.phase === "dead") return;
+
+    // 多命模式：扣一条命，不死亡
+    if (this.lives > 1) {
+      this.lives -= 1;
+      this.bird.invuln = 1.5;
+      this.shakeAmount = 8;
+      this.shakeDuration = 0.5;
+      if (this.soundOn) Audio.die();
+      // 重置鸟位置
+      this.bird.pos.x = this.viewW * 0.28;
+      this.bird.pos.y = this.viewH * 0.4;
+      this.bird.vel.y = 0;
+      return;
+    }
+
     this.bird.alive = false;
     this.particles.burst(this.bird.pos.x, this.bird.pos.y, 50);
+    this.shakeAmount = 15;
+    this.shakeDuration = 0.5;
     if (this.soundOn) Audio.die();
     this.setPhase("dead");
     // 提交分数
@@ -607,16 +660,45 @@ export class GameEngine {
     profile.addGamePlayed(this.score, this.starsEarned, this.trackedPipes, this.trackedPowerUps, this.trackedCombo);
     // 更新任务进度
     this.updateTaskProgress(profile);
+    // 检查成就
+    this.checkAchievements();
     this.cb.onDeath({
       phase: "dead",
       score: this.score,
       bestScore: Math.max(this.score, profile.profile.bestScore),
       starsEarned: this.starsEarned,
       combo: this.combo,
+      mode: this.mode,
       activePowerUp: this.activeKind
         ? { kind: this.activeKind, remaining: this.activeRemaining }
         : null,
     });
+  }
+
+  private checkAchievements() {
+    const p = useProfileStore.getState().profile;
+    const stats = {
+      bestScore: p.bestScore,
+      totalScore: p.totalScore,
+      gamesPlayed: p.gamesPlayed,
+      totalStars: p.totalStarsCollected,
+      totalPowerUps: p.totalPowerUps,
+      maxCombo: p.maxCombo,
+      ownedSkins: p.ownedSkins.length,
+      ownedThemes: p.ownedThemes.length,
+      speedBest: this.mode === "speed" ? Math.max(p.bestScore, this.score) : 0,
+      precisionBest: this.mode === "precision" ? Math.max(p.bestScore, this.score) : 0,
+      survivalBest: this.mode === "survival" ? Math.max(p.bestScore, this.score) : 0,
+      zenBest: this.mode === "zen" ? Math.max(p.bestScore, this.score) : 0,
+      noHitBest: this.trackedPowerUps === 0 ? Math.max(p.bestScore, this.score) : 0,
+      dailyCompleted: p.dailyTasks.filter((t) => t.completed && t.claimed).length,
+    };
+    for (const ach of ACHIEVEMENTS) {
+      const result = ach.check(stats);
+      if (result.done) {
+        useProfileStore.getState().addAchievement(ach.id, true);
+      }
+    }
   }
 
   private updateTaskProgress(profile: ReturnType<typeof useProfileStore.getState>) {
@@ -659,7 +741,14 @@ export class GameEngine {
   // === 渲染 ===
   private render() {
     const ctx = this.ctx;
-    ctx.clearRect(0, 0, this.viewW, this.viewH);
+    ctx.save();
+    // 震屏效果
+    if (this.shakeAmount > 0.5) {
+      const sx = (Math.random() - 0.5) * this.shakeAmount * 2;
+      const sy = (Math.random() - 0.5) * this.shakeAmount * 2;
+      ctx.translate(sx, sy);
+    }
+    ctx.clearRect(-10, -10, this.viewW + 20, this.viewH + 20);
 
     // 背景
     drawBackground(ctx, {
@@ -765,6 +854,7 @@ export class GameEngine {
 
     // 纸纹叠加
     if (this.textureStrength > 0) {
+      ctx.restore();
       ctx.save();
       ctx.globalAlpha = this.textureStrength / 200;
       const pat = ctx.createPattern(this.makeNoiseTile(), "repeat");
@@ -772,6 +862,8 @@ export class GameEngine {
         ctx.fillStyle = pat;
         ctx.fillRect(0, 0, this.viewW, this.viewH);
       }
+      ctx.restore();
+    } else {
       ctx.restore();
     }
   }

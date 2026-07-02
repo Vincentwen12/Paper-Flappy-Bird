@@ -65,6 +65,9 @@ export interface Translations {
     settings: string;
     hint: string;
     subtitleEn: string;
+    modeSelect: string;
+    modeLocked: string;
+    modeUnlock: string;
   };
   // 游戏页
   game: {
@@ -438,6 +441,9 @@ export function buildTranslations(lang: Lang): Translations {
       settings: { zh: "设置", en: "Settings", ja: "設定", ko: "설정", es: "Ajustes", fr: "Paramètres", ru: "Настройки", de: "Einstellungen" }[lang],
       hint: { zh: "Press · SPACE / TAP to begin", en: "Press · SPACE / TAP to begin", ja: "SPACE / タップ で開始", ko: "SPACE / 터치로 시작", es: "Presiona · ESPACIO / TOCA para comenzar", fr: "Appuyez · ESPACE / TAPEZ pour commencer", ru: "Нажмите · ПРОБЕЛ / КОСНИТЕСЬ чтобы начать", de: "Drücke · LEERTASTE / TIPPE zum Starten" }[lang],
       subtitleEn: { zh: "A paper-craft arcade", en: "A paper-craft arcade", ja: "A paper-craft arcade", ko: "A paper-craft arcade", es: "Un arcade de papel artesanal", fr: "Un jeu d'arcade en papier", ru: "Аркада из бумаги", de: "Eine Papierkunst-Arcade" }[lang],
+      modeSelect: { zh: "选择模式", en: "Select Mode", ja: "モード選択", ko: "모드 선택", es: "Seleccionar Modo", fr: "Choisir le Mode", ru: "Выбор Режима", de: "Modus Wählen" }[lang],
+      modeLocked: { zh: "未解锁", en: "Locked", ja: "ロック中", ko: "잠김", es: "Bloqueado", fr: "Verrouillé", ru: "Заблокировано", de: "Gesperrt" }[lang],
+      modeUnlock: { zh: "需要最高分", en: "Best score needed:", ja: "必要な最高スコア:", ko: "필요한 최고 점수:", es: "Puntuación necesaria:", fr: "Score requis:", ru: "Требуется очков:", de: "Erforderliche Punktzahl:" }[lang],
     },
     game: {
       ready: { zh: "READY", en: "READY", ja: "READY", ko: "READY", es: "LISTO", fr: "PRÊT", ru: "ГОТОВ", de: "BEREIT" }[lang],

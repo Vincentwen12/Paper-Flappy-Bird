@@ -6,17 +6,29 @@ import { PaperTitle } from "@/components/PaperTitle";
 import { PreviewBird } from "@/components/PreviewBird";
 import { FitText } from "@/components/FitText";
 import { useProfileStore } from "@/store/profileStore";
+import { useGameStore } from "@/store/gameStore";
 import { findSkin } from "@/data/skins";
-import { Sparkles, Trophy, Settings as SettingsIcon, BookHeart, Store, Gift } from "lucide-react";
+import { GAME_MODES, getModeName, getModeDesc, type GameModeId } from "@/data/gameModes";
+import { Sparkles, Trophy, Settings as SettingsIcon, BookHeart, Store, Gift, Lock } from "lucide-react";
 
 export default function Home() {
   const navigate = useNavigate();
   const profile = useProfileStore((s) => s.profile);
+  const currentMode = useGameStore((s) => s.currentMode);
+  const setCurrentMode = useGameStore((s) => s.setCurrentMode);
 
   const { t, lang } = useI18n();
   const skin = findSkin(profile.equippedSkin);
   const [phase, setPhase] = useState(0);
   const completedTasks = profile.dailyTasks.filter((t) => t.completed && !t.claimed).length;
+
+  const handleSelectMode = (id: GameModeId) => {
+    const mode = GAME_MODES.find((m) => m.id === id);
+    if (!mode) return;
+    if (profile.bestScore >= mode.unlockScore) {
+      setCurrentMode(id);
+    }
+  };
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -59,6 +71,42 @@ export default function Home() {
             <Trophy className="w-3.5 h-3.5 text-mist-600" />
             <span>{profile.bestScore}</span>
             <span className="text-ink-50/60">{t.common.bestScore}</span>
+          </div>
+        </div>
+
+        {/* 模式选择 */}
+        <div className="w-full max-w-sm">
+          <div className="text-ink-50/50 text-[10px] font-sans tracking-[0.3em] uppercase mb-2 text-center">
+            {t.home.modeSelect}
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {GAME_MODES.map((mode) => {
+              const unlocked = profile.bestScore >= mode.unlockScore;
+              const selected = currentMode === mode.id;
+              return (
+                <button
+                  key={mode.id}
+                  onClick={() => handleSelectMode(mode.id)}
+                  disabled={!unlocked}
+                  className={`flex-shrink-0 w-[72px] py-2 px-1 rounded-sm border transition-all duration-200 flex flex-col items-center gap-1 ${
+                    selected
+                      ? "border-ink-200 bg-ink-200/5 shadow-paper"
+                      : unlocked
+                        ? "border-paper-300 bg-paper-50/50 hover:border-ink-100"
+                        : "border-paper-300/50 bg-paper-100/30 opacity-50 cursor-not-allowed"
+                  }`}
+                  title={unlocked ? getModeDesc(mode.id, lang) : `${t.home.modeUnlock} ${mode.unlockScore}`}
+                >
+                  <span className="text-lg leading-none">{mode.icon}</span>
+                  <FitText baseSize={10} minSize={7}>
+                    {getModeName(mode.id, lang)}
+                  </FitText>
+                  {!unlocked && (
+                    <Lock className="w-2.5 h-2.5 text-ink-50/40" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 

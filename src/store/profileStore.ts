@@ -5,6 +5,9 @@ import { THEMES } from "@/data/themes";
 import { EQUIPMENT } from "@/data/equipment";
 import { generateDailyTasks, getToday, getTaskDef } from "@/data/tasks";
 import type { TaskProgress } from "@/data/tasks";
+import type { AchievementProgress } from "@/data/achievements";
+import type { AchievementId } from "@/data/achievements";
+import { getAchievement } from "@/data/achievements";
 
 export interface LeaderboardEntry {
   score: number;
@@ -42,6 +45,9 @@ export interface Profile {
     paperTexture: number;
     language: string;
   };
+  achievements: AchievementProgress[];
+  modeBest: Record<string, number>; // modeId -> best score
+  noHitBest: number;
 }
 
 const DEFAULT_PROFILE: Profile = {
@@ -72,6 +78,9 @@ const DEFAULT_PROFILE: Profile = {
     paperTexture: 60,
     language: "zh",
   },
+  achievements: [],
+  modeBest: {},
+  noHitBest: 0,
 };
 
 const STORAGE_KEY = "profile";
@@ -113,6 +122,11 @@ const loadProfile = (): Profile => {
   if (p.totalStarsCollected === undefined) p.totalStarsCollected = 0;
   if (p.maxCombo === undefined) p.maxCombo = 0;
 
+  // 合并：成就与模式最佳
+  if (!p.achievements) p.achievements = [];
+  if (!p.modeBest) p.modeBest = {};
+  if (p.noHitBest === undefined) p.noHitBest = 0;
+
   // 每日任务刷新
   const today = getToday();
   if (!p.dailyTaskDate || p.dailyTaskDate !== today) {
@@ -147,6 +161,12 @@ interface ProfileState {
   claimTaskReward: (taskId: string) => number;
   // 统计
   addGamePlayed: (score: number, stars: number, pipes: number, powerUps: number, combo: number) => void;
+  // 成就
+  addAchievement: (id: AchievementId, done: boolean) => void;
+  claimAchievement: (id: AchievementId) => number;
+  // 模式最佳
+  setModeBest: (modeId: string, score: number) => void;
+  setNoHitBest: (score: number) => void;
   clearAll: () => void;
 }
 
@@ -325,6 +345,64 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         totalPowerUps: s.profile.totalPowerUps + powerUps,
         maxCombo: Math.max(s.profile.maxCombo, combo),
       };
+      save(next);
+      return { profile: next };
+    }),
+  addAchievement: (id, done) =>
+    set((s) => {
+      const existing = s.profile.achievements.find((a) => a.id === id);
+      let achievements: AchievementProgress[];
+      if (existing) {
+        if (done && !existing.done) {
+          achievements = s.profile.achievements.map((a) =>
+            a.id === id ? { ...a, done: true } : a,
+          );
+        } else {
+          return s;
+        }
+      } else {
+        achievements = [
+          ...s.profile.achievements,
+          { id, done, claimed: false },
+        ];
+      }
+      const next = { ...s.profile, achievements };
+      save(next);
+      return { profile: next };
+    }),
+  claimAchievement: (id) => {
+    const s = get().profile;
+    const achievement = s.achievements.find((a) => a.id === id);
+    if (!achievement || !achievement.done || achievement.claimed) return 0;
+    const def = getAchievement(id);
+    if (!def) return 0;
+    const achievements = s.achievements.map((a) =>
+      a.id === id ? { ...a, claimed: true } : a,
+    );
+    const next = {
+      ...s,
+      totalStars: s.totalStars + def.reward,
+      achievements,
+    };
+    save(next);
+    set({ profile: next });
+    return def.reward;
+  },
+  setModeBest: (modeId, score) =>
+    set((s) => {
+      const current = s.profile.modeBest[modeId] ?? 0;
+      if (score <= current) return s;
+      const next = {
+        ...s.profile,
+        modeBest: { ...s.profile.modeBest, [modeId]: score },
+      };
+      save(next);
+      return { profile: next };
+    }),
+  setNoHitBest: (score) =>
+    set((s) => {
+      if (score <= s.profile.noHitBest) return s;
+      const next = { ...s.profile, noHitBest: score };
       save(next);
       return { profile: next };
     }),

@@ -38,6 +38,7 @@ export default function Game() {
     engine.setSkin(profile.equippedSkin);
     engine.setTheme(profile.equippedTheme);
     engine.setQuality(profile.settings.quality);
+    engine.setMode(useGameStore.getState().currentMode);
     engine.setAudioOptions({
       musicOn: profile.settings.musicOn,
       soundOn: profile.settings.soundOn,
