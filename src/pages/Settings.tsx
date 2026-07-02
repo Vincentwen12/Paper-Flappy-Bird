@@ -4,9 +4,10 @@ import { PaperTitle } from "@/components/PaperTitle";
 import { PaperCard } from "@/components/PaperCard";
 import { GhostButton } from "@/components/GhostButton";
 import { useProfileStore } from "@/store/profileStore";
+import { useAuthStore } from "@/store/authStore";
 import { useI18n, LANG_LABELS } from "@/i18n";
 import type { Lang } from "@/i18n";
-import { ArrowLeft, Volume2, Music2, Image as ImageIcon, Trash2, Globe } from "lucide-react";
+import { ArrowLeft, Volume2, Music2, Image as ImageIcon, Trash2, Globe, LogOut } from "lucide-react";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export default function Settings() {
   const profile = useProfileStore((s) => s.profile);
   const setSetting = useProfileStore((s) => s.setSetting);
   const clearAll = useProfileStore((s) => s.clearAll);
+  const auth = useAuthStore();
   const [toast, setToast] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -170,6 +172,27 @@ export default function Settings() {
           >
             <Trash2 className="w-3.5 h-3.5" /> {t.settings.clearData}
           </button>
+        </PaperCard>
+
+        {/* 账号 */}
+        <PaperCard className="p-6 flex flex-col gap-3">
+          <SectionTitle>{t.auth.username}</SectionTitle>
+          <div className="flex items-center justify-between">
+            <span className="font-serif text-ink-400 text-sm tracking-widest">
+              {auth.username}
+            </span>
+            <button
+              onClick={() => {
+                if (confirm(t.settings.logoutConfirm)) {
+                  auth.logout();
+                  navigate("/auth");
+                }
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-serif tracking-widest text-sakura-600 border border-sakura-300/50 rounded-sm btn-lift hover:border-sakura-400 hover:bg-sakura-50/50"
+            >
+              <LogOut className="w-3.5 h-3.5" /> {t.auth.logout}
+            </button>
+          </div>
         </PaperCard>
 
         {toast && (

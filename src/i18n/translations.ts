@@ -69,6 +69,30 @@ export interface Translations {
     modeLocked: string;
     modeUnlock: string;
   };
+  // 账号
+  auth: {
+    title: string;
+    subtitle: string;
+    registerTitle: string;
+    loginTitle: string;
+    username: string;
+    usernamePlaceholder: string;
+    password: string;
+    passwordPlaceholder: string;
+    registerBtn: string;
+    loginBtn: string;
+    switchToLogin: string;
+    switchToRegister: string;
+    errorUsernameLength: string;
+    errorPasswordLength: string;
+    errorAlreadyRegistered: string;
+    errorWrongCredentials: string;
+    errorNoAccount: string;
+    showPassword: string;
+    hidePassword: string;
+    logout: string;
+    logoutConfirm: string;
+  };
   // 游戏页
   game: {
     ready: string;
@@ -158,6 +182,8 @@ export interface Translations {
     qualityMed: string;
     qualityHigh: string;
     reset: string;
+    logout: string;
+    logoutConfirm: string;
   };
   // 道具
   powerUps: Record<string, { name: string; desc: string }>;
@@ -445,6 +471,29 @@ export function buildTranslations(lang: Lang): Translations {
       modeLocked: { zh: "未解锁", en: "Locked", ja: "ロック中", ko: "잠김", es: "Bloqueado", fr: "Verrouillé", ru: "Заблокировано", de: "Gesperrt" }[lang],
       modeUnlock: { zh: "需要最高分", en: "Best score needed:", ja: "必要な最高スコア:", ko: "필요한 최고 점수:", es: "Puntuación necesaria:", fr: "Score requis:", ru: "Требуется очков:", de: "Erforderliche Punktzahl:" }[lang],
     },
+    auth: {
+      title: { zh: "纸艺天空", en: "Paper Sky", ja: "紙芸天空", ko: "종이예술 하늘", es: "Cielo de Papel", fr: "Ciel de Papier", ru: "Бумажное Небо", de: "Papierhimmel" }[lang],
+      subtitle: { zh: "纸 艺 天 空 · vol.1", en: "Paper Sky · vol.1", ja: "紙芸天空 · vol.1", ko: "종이예술 하늘 · vol.1", es: "Cielo de Papel · vol.1", fr: "Ciel de Papier · vol.1", ru: "Бумажное Небо · vol.1", de: "Papierhimmel · vol.1" }[lang],
+      registerTitle: { zh: "创建你的账号", en: "Create Your Account", ja: "アカウントを作成", ko: "계정 만들기", es: "Crear Tu Cuenta", fr: "Créez Votre Compte", ru: "Создайте Аккаунт", de: "Konto Erstellen" }[lang],
+      loginTitle: { zh: "欢迎回来", en: "Welcome Back", ja: "おかえりなさい", ko: "다시 오신 것을 환영합니다", es: "Bienvenido de Nuevo", fr: "Bon Retour", ru: "С Возвращением", de: "Willkommen Zurück" }[lang],
+      username: { zh: "用户名", en: "Username", ja: "ユーザー名", ko: "사용자 이름", es: "Usuario", fr: "Nom d'utilisateur", ru: "Имя пользователя", de: "Benutzername" }[lang],
+      usernamePlaceholder: { zh: "输入用户名", en: "Enter username", ja: "ユーザー名を入力", ko: "사용자 이름 입력", es: "Ingresa tu usuario", fr: "Entrez votre nom", ru: "Введите имя", de: "Benutzername eingeben" }[lang],
+      password: { zh: "密码", en: "Password", ja: "パスワード", ko: "비밀번호", es: "Contraseña", fr: "Mot de passe", ru: "Пароль", de: "Passwort" }[lang],
+      passwordPlaceholder: { zh: "输入密码", en: "Enter password", ja: "パスワードを入力", ko: "비밀번호 입력", es: "Ingresa tu contraseña", fr: "Entrez votre mot de passe", ru: "Введите пароль", de: "Passwort eingeben" }[lang],
+      registerBtn: { zh: "注册", en: "Register", ja: "登録", ko: "등록", es: "Registrarse", fr: "S'inscrire", ru: "Зарегистрироваться", de: "Registrieren" }[lang],
+      loginBtn: { zh: "登录", en: "Sign In", ja: "ログイン", ko: "로그인", es: "Iniciar Sesión", fr: "Se Connecter", ru: "Войти", de: "Anmelden" }[lang],
+      switchToLogin: { zh: "已有账号？去登录", en: "Already have an account? Sign In", ja: "アカウントをお持ちですか？ログイン", ko: "이미 계정이 있나요? 로그인", es: "¿Ya tienes cuenta? Inicia Sesión", fr: "Déjà un compte ? Connectez-vous", ru: "Уже есть аккаунт? Войти", de: "Bereits ein Konto? Anmelden" }[lang],
+      switchToRegister: { zh: "没有账号？去注册", en: "Don't have an account? Register", ja: "アカウントがない？登録する", ko: "계정이 없나요? 등록하기", es: "¿No tienes cuenta? Regístrate", fr: "Pas de compte ? Inscrivez-vous", ru: "Нет аккаунта? Зарегистрироваться", de: "Kein Konto? Registrieren" }[lang],
+      errorUsernameLength: { zh: "用户名需要 3-20 个字符", en: "Username must be 3-20 characters", ja: "ユーザー名は3〜20文字必要です", ko: "사용자 이름은 3-20자여야 합니다", es: "El usuario debe tener 3-20 caracteres", fr: "Le nom doit contenir 3-20 caractères", ru: "Имя должно быть 3-20 символов", de: "Benutzername muss 3-20 Zeichen lang sein" }[lang],
+      errorPasswordLength: { zh: "密码需要 4-32 个字符", en: "Password must be 4-32 characters", ja: "パスワードは4〜32文字必要です", ko: "비밀번호는 4-32자여야 합니다", es: "La contraseña debe tener 4-32 caracteres", fr: "Le mot de passe doit contenir 4-32 caractères", ru: "Пароль должен быть 4-32 символов", de: "Passwort muss 4-32 Zeichen lang sein" }[lang],
+      errorAlreadyRegistered: { zh: "此设备已注册账号", en: "This device already has an account", ja: "このデバイスには既にアカウントがあります", ko: "이 기기에 이미 계정이 있습니다", es: "Este dispositivo ya tiene una cuenta", fr: "Cet appareil a déjà un compte", ru: "На этом устройстве уже есть аккаунт", de: "Dieses Gerät hat bereits ein Konto" }[lang],
+      errorWrongCredentials: { zh: "用户名或密码错误", en: "Incorrect username or password", ja: "ユーザー名またはパスワードが間違っています", ko: "사용자 이름 또는 비밀번호가 틀렸습니다", es: "Usuario o contraseña incorrectos", fr: "Nom d'utilisateur ou mot de passe incorrect", ru: "Неверное имя пользователя или пароль", de: "Falscher Benutzername oder Passwort" }[lang],
+      errorNoAccount: { zh: "未找到账号，请先注册", en: "No account found, please register first", ja: "アカウントが見つかりません。登録してください", ko: "계정을 찾을 수 없습니다. 먼저 등록하세요", es: "No se encontró cuenta, regístrate primero", fr: "Aucun compte trouvé, veuillez vous inscrire", ru: "Аккаунт не найден, зарегистрируйтесь", de: "Kein Konto gefunden, bitte zuerst registrieren" }[lang],
+      showPassword: { zh: "显示", en: "Show", ja: "表示", ko: "보기", es: "Mostrar", fr: "Afficher", ru: "Показать", de: "Anzeigen" }[lang],
+      hidePassword: { zh: "隐藏", en: "Hide", ja: "非表示", ko: "숨기기", es: "Ocultar", fr: "Masquer", ru: "Скрыть", de: "Ausblenden" }[lang],
+      logout: { zh: "退出登录", en: "Sign Out", ja: "ログアウト", ko: "로그아웃", es: "Cerrar Sesión", fr: "Déconnexion", ru: "Выйти", de: "Abmelden" }[lang],
+      logoutConfirm: { zh: "确定要退出登录吗？游戏数据会保留。", en: "Are you sure you want to sign out? Your game data will be preserved.", ja: "ログアウトしてもよろしいですか？ゲームデータは保持されます。", ko: "로그아웃하시겠습니까? 게임 데이터는 보존됩니다.", es: "¿Estás seguro de cerrar sesión? Tus datos se conservarán.", fr: "Voulez-vous vraiment vous déconnecter ? Vos données seront conservées.", ru: "Вы уверены, что хотите выйти? Данные игры будут сохранены.", de: "Möchten Sie sich wirklich abmelden? Ihre Spieldaten bleiben erhalten." }[lang],
+    },
     game: {
       ready: { zh: "READY", en: "READY", ja: "READY", ko: "READY", es: "LISTO", fr: "PRÊT", ru: "ГОТОВ", de: "BEREIT" }[lang],
       readyHint: { zh: "轻点 / 空格 起飞", en: "Tap / Space to fly", ja: "タップ / スペースで飛ぶ", ko: "터치 / 스페이스로 날기", es: "Toca / Espacio para volar", fr: "Tapez / Espace pour voler", ru: "Коснитесь / Пробел чтобы лететь", de: "Tippe / Leertaste zum Fliegen" }[lang],
@@ -528,6 +577,8 @@ export function buildTranslations(lang: Lang): Translations {
       qualityMed: { zh: "中", en: "Medium", ja: "中", ko: "중간", es: "Medio", fr: "Moyen", ru: "Среднее", de: "Mittel" }[lang],
       qualityHigh: { zh: "高", en: "High", ja: "高", ko: "높음", es: "Alto", fr: "Haut", ru: "Высокое", de: "Hoch" }[lang],
       reset: { zh: "已重置", en: "Reset", ja: "リセット済み", ko: "초기화됨", es: "Restablecido", fr: "Réinitialisé", ru: "Сброшено", de: "Zurückgesetzt" }[lang],
+      logout: { zh: "退出登录", en: "Sign Out", ja: "ログアウト", ko: "로그아웃", es: "Cerrar Sesión", fr: "Déconnexion", ru: "Выйти", de: "Abmelden" }[lang],
+      logoutConfirm: { zh: "确定要退出登录吗？游戏数据会保留。", en: "Are you sure you want to sign out? Your game data will be preserved.", ja: "ログアウトしてもよろしいですか？ゲームデータは保持されます。", ko: "로그아웃하시겠습니까? 게임 데이터는 보존됩니다.", es: "¿Estás seguro de cerrar sesión? Tus datos se conservarán.", fr: "Voulez-vous vraiment vous déconnecter ? Vos données seront conservées.", ru: "Вы уверены, что хотите выйти? Данные игры будут сохранены.", de: "Möchten Sie sich wirklich abmelden? Ihre Spieldaten bleiben erhalten." }[lang],
     },
     powerUps: Object.fromEntries(
       Object.keys(POWERUP_NAMES).map((k) => [
