@@ -9,6 +9,8 @@ export interface BackgroundDrawOptions {
   time: number;
   // 视差偏移（0..1）
   scroll: number;
+  scrollSky?: number;
+  scrollMount?: number;
 }
 
 export function drawBackground(
@@ -16,6 +18,8 @@ export function drawBackground(
   opt: BackgroundDrawOptions,
 ) {
   const { theme, width, height, groundY, time, scroll } = opt;
+  const scrollSky = opt.scrollSky ?? scroll;
+  const scrollMount = opt.scrollMount ?? scroll;
 
   // 天空渐变
   const sky = ctx.createLinearGradient(0, 0, 0, groundY);
@@ -27,7 +31,7 @@ export function drawBackground(
   ctx.fillRect(0, 0, width, groundY);
 
   // 远云
-  drawClouds(ctx, width, groundY, time, theme, scroll * 0.2);
+  drawClouds(ctx, width, groundY, time, theme, scrollSky * 0.2);
 
   // 远山（多边形）
   drawPaperMountain(
@@ -35,7 +39,7 @@ export function drawBackground(
     width,
     groundY,
     theme.mountainFar,
-    scroll * 0.3,
+    scrollMount * 0.3,
     0.35,
     0.6,
   );
@@ -46,7 +50,7 @@ export function drawBackground(
     width,
     groundY,
     theme.mountainNear,
-    scroll * 0.5,
+    scrollMount * 0.5,
     0.5,
     0.78,
   );

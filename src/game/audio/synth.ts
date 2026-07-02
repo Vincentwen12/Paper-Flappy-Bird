@@ -6,6 +6,7 @@ export class Synth {
   musicTimer: number | null = null;
   musicStep = 0;
   musicOn = false;
+  private fadeAnimFrame: number | null = null;
   // BGM 各层
   private bassGain: GainNode | null = null;
   private chordGain: GainNode | null = null;
@@ -206,11 +207,34 @@ export class Synth {
     o.stop(startTime + 0.15);
   }
 
+  private fadeToGain(target: number, duration: number, onDone?: () => void) {
+    if (!this.musicGain) return;
+    if (this.fadeAnimFrame !== null) {
+      cancelAnimationFrame(this.fadeAnimFrame);
+      this.fadeAnimFrame = null;
+    }
+    const start = this.musicGain.gain.value;
+    const startTime = performance.now();
+    const step = () => {
+      const elapsed = (performance.now() - startTime) / 1000;
+      const t = Math.min(elapsed / duration, 1);
+      if (this.musicGain) this.musicGain.gain.value = start + (target - start) * t;
+      if (t < 1) {
+        this.fadeAnimFrame = requestAnimationFrame(step);
+      } else {
+        this.fadeAnimFrame = null;
+        onDone?.();
+      }
+    };
+    this.fadeAnimFrame = requestAnimationFrame(step);
+  }
+
   startMusic() {
-    this.setMusicOn(true);
+    this.musicOn = true;
     if (this.musicTimer !== null) return;
     this.ensure();
     if (!this.ctx) return;
+    if (this.musicGain) this.musicGain.gain.value = 0;
 
     const bpm = 72;
     const beatDur = 60 / bpm; // 一拍时长
@@ -283,14 +307,25 @@ export class Synth {
     };
 
     this.musicTimer = window.setInterval(tick, barDur * 1000);
+    this.fadeToGain(0.18, 1.5);
   }
 
   stopMusic() {
-    if (this.musicTimer !== null) {
-      clearInterval(this.musicTimer);
-      this.musicTimer = null;
+    if (this.musicGain) {
+      this.fadeToGain(0, 0.8, () => {
+        if (this.musicTimer !== null) {
+          clearInterval(this.musicTimer);
+          this.musicTimer = null;
+        }
+        this.musicOn = false;
+      });
+    } else {
+      if (this.musicTimer !== null) {
+        clearInterval(this.musicTimer);
+        this.musicTimer = null;
+      }
+      this.musicOn = false;
     }
-    this.setMusicOn(false);
   }
 }
 

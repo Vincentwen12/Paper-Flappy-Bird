@@ -14,6 +14,7 @@ export default function Game() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const [showPause, setShowPause] = useState(false);
+  const [scorePop, setScorePop] = useState(false);
   const phase = useGameStore((s) => s.phase);
   const score = useGameStore((s) => s.score);
   const combo = useGameStore((s) => s.combo);
@@ -88,6 +89,13 @@ export default function Game() {
     }
   }, [phase]);
 
+  // 得分跳动动画
+  useEffect(() => {
+    setScorePop(true);
+    const timer = setTimeout(() => setScorePop(false), 300);
+    return () => clearTimeout(timer);
+  }, [score]);
+
   const handlePause = () => {
     const e = engineRef.current;
     if (!e) return;
@@ -115,7 +123,7 @@ export default function Game() {
   };
 
   return (
-    <div className="w-full h-full flex items-center justify-center bg-paper-200/40">
+    <div className="page-enter w-full h-full flex items-center justify-center bg-paper-200/40">
       <div
         className="relative bg-paper-100 shadow-paper-lg rounded-sm overflow-hidden border border-paper-300"
         style={{ width: "min(96vw, 480px)", aspectRatio: "9 / 16" }}
@@ -128,7 +136,7 @@ export default function Game() {
 
         {/* HUD */}
         <div className="absolute top-3 left-3 right-3 flex items-start justify-between pointer-events-none">
-          <div className="font-mono text-ink-400 text-3xl tracking-tight font-light drop-shadow-sm">
+          <div className={`font-mono text-ink-400 text-3xl tracking-tight font-light drop-shadow-sm ${scorePop ? 'score-pop' : ''}`}>
             {score}
           </div>
           <div className="flex flex-col items-end gap-2 pointer-events-auto">

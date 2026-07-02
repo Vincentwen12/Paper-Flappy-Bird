@@ -34,6 +34,14 @@ import type {
 } from "../types";
 import { DEFAULT_CONFIG } from "../types";
 
+interface FloatText {
+  x: number;
+  y: number;
+  text: string;
+  life: number;
+  maxLife: number;
+}
+
 export interface EngineSnapshot {
   phase: GamePhase;
   score: number;
@@ -82,6 +90,12 @@ export class GameEngine {
   private rafId = 0;
   private flapPhase = 0;
   private invulnFlash = 0;
+  private targetBirdRot = 0;
+  private birdRot = 0;
+  private trailTimer = 0;
+  private deathSlowTimer = 0;
+  private deathGrayscale = 0;
+  private floatTexts: FloatText[] = [];
 
   // 视口
   private viewW = 0;
@@ -261,6 +275,12 @@ export class GameEngine {
     this.starTimer = 0;
     this.powerUpTimer = 0;
     this.petalTimer = 0;
+    this.trailTimer = 0;
+    this.deathSlowTimer = 0;
+    this.deathGrayscale = 0;
+    this.targetBirdRot = 0;
+    this.birdRot = 0;
+    this.floatTexts = [];
     this.score = 0;
     this.combo = 0;
     this.starsEarned = 0;
@@ -323,7 +343,8 @@ export class GameEngine {
     if (dt > 0.1) dt = 0.1; // 避免长时暂停后跳跃
 
     // 仅在 playing 时累加 elapsed，避免暂停时背景继续滚动
-    if (this.phase === "playing") {
+    // 死亡慢动作期间也继续 update
+    if (this.phase === "playing" || this.deathSlowTimer > 0) {
       this.elapsed += dt;
       this.update(dt);
     }
@@ -332,7 +353,27 @@ export class GameEngine {
   };
 
   private update(dt: number) {
-    this.flapPhase = (this.flapPhase + dt * 8) % 1;
+    // 死亡慢动作
+    if (this.deathSlowTimer > 0) {
+      this.deathSlowTimer -= dt;
+      const progress = 1 - Math.max(0, this.deathSlowTimer) / 0.3;
+      const slowFactor = 1 - progress * 0.9;
+      dt *= slowFactor;
+      this.deathGrayscale = Math.min(0.6, progress * 0.6);
+    }
+
+    // 鸟旋转平滑化
+    if (this.bird.vel.y > 0) {
+      this.targetBirdRot = Math.min(this.bird.vel.y * 0.08, 1.2);
+    } else {
+      this.targetBirdRot = -0.3;
+    }
+    this.birdRot += (this.targetBirdRot - this.birdRot) * Math.min(dt * 10, 1);
+    this.bird.rot = this.birdRot;
+
+    // 翅膀扇动频率：上升时加快
+    const flapSpeed = this.bird.vel.y < 0 ? 8 * 1.5 : 8;
+    this.flapPhase = (this.flapPhase + dt * flapSpeed) % 1;
 
     // 鸟物理
     this.physics.updateBird(this.bird, dt, this.config, this.slowFactor);
@@ -371,6 +412,14 @@ export class GameEngine {
         useGameStore.getState().setStars(this.starsEarned);
         if (this.soundOn) Audio.score();
         this.cb.onScore(this.score, delta, this.combo);
+        // 飘字特效
+        this.floatTexts.push({
+          x: p.x + p.width,
+          y: p.gapY,
+          text: "+" + delta,
+          life: 0.6,
+          maxLife: 0.6,
+        });
       }
     }
     // 移除出屏
@@ -456,6 +505,39 @@ export class GameEngine {
         trailColors[Math.floor(Math.random() * trailColors.length)] ?? "#fafaf7",
       );
     }
+
+    // 拖尾粒子（每 0.05s 生成）
+    this.trailTimer += dt;
+    if (this.trailTimer >= 0.05) {
+      this.trailTimer = 0;
+      const count = Math.random() < 0.5 ? 1 : 2;
+      for (let i = 0; i < count; i++) {
+        this.particles.particles.push({
+          pos: {
+            x: this.bird.pos.x - this.bird.radius * 0.8 + rand(-2, 2),
+            y: this.bird.pos.y + rand(-2, 2),
+          },
+          vel: { x: rand(-30, -10), y: rand(-15, 15) },
+          rot: rand(0, Math.PI * 2),
+          rotSpeed: rand(-3, 3),
+          size: rand(2, 4),
+          color: this.skin.colors[0] ?? "#fafaf7",
+          life: 0.5,
+          maxLife: 0.5,
+          shape: "circle",
+        });
+      }
+    }
+
+    // 飘字更新
+    for (let i = this.floatTexts.length - 1; i >= 0; i--) {
+      const ft = this.floatTexts[i];
+      ft.life -= dt;
+      ft.y -= 40 * dt;
+      if (ft.life <= 0) {
+        this.floatTexts.splice(i, 1);
+      }
+    }
   }
 
   private spawnPipe() {
@@ -475,6 +557,7 @@ export class GameEngine {
       swingAmp: swing ? rand(20, 50) : 0,
       swingSpeed: swing ? rand(0.7, 1.3) : 0,
       phase: Math.random() * Math.PI * 2,
+      spawnTime: this.elapsed,
     });
   }
 
@@ -541,6 +624,24 @@ export class GameEngine {
         this.starsEarned += 1;
         useGameStore.getState().setStars(this.starsEarned);
         this.particles.spark(s.pos.x, s.pos.y);
+        // 星芒收集爆散：额外 8-12 个金黄色粒子
+        const goldColors = ["#f5d76e", "#f9e076", "#e8c84a", "#fce38a"];
+        const goldCount = randInt(8, 12);
+        for (let i = 0; i < goldCount; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = rand(60, 180);
+          this.particles.particles.push({
+            pos: { x: s.pos.x, y: s.pos.y },
+            vel: { x: Math.cos(angle) * speed, y: Math.sin(angle) * speed },
+            rot: rand(0, Math.PI * 2),
+            rotSpeed: rand(-4, 4),
+            size: rand(2, 5),
+            color: pick(goldColors),
+            life: 0.4,
+            maxLife: 0.4,
+            shape: "circle",
+          });
+        }
         if (this.soundOn) Audio.pickup();
         this.cb.onPickStar(1);
       }
@@ -645,6 +746,8 @@ export class GameEngine {
     this.particles.burst(this.bird.pos.x, this.bird.pos.y, 50);
     this.shakeAmount = 15;
     this.shakeDuration = 0.5;
+    this.deathSlowTimer = 0.3;
+    this.deathGrayscale = 0;
     if (this.soundOn) Audio.die();
     this.setPhase("dead");
     // 提交分数
@@ -758,6 +861,8 @@ export class GameEngine {
       groundY: this.config.groundY,
       time: this.elapsed,
       scroll: this.elapsed * this.config.pipeSpeed * 0.01,
+      scrollSky: this.elapsed * this.config.pipeSpeed * 0.001,
+      scrollMount: this.elapsed * this.config.pipeSpeed * 0.003,
     });
 
     // 环境纸屑
@@ -773,12 +878,30 @@ export class GameEngine {
 
     // 管道
     for (const p of this.pipes) {
-      drawPipe(ctx, p, this.viewH, this.config.groundY, {
-        fill: this.theme.pipeFill,
-        stroke: this.theme.pipeStroke,
-        swing: !!p.swing,
-        time: this.elapsed,
-      });
+      const age = this.elapsed - (p.spawnTime ?? this.elapsed);
+      if (age < 0.2) {
+        const t = age / 0.2;
+        const scaleX = easeOutBack(t);
+        const pipeCenterX = p.x + p.width / 2;
+        ctx.save();
+        ctx.translate(pipeCenterX, 0);
+        ctx.scale(scaleX, 1);
+        ctx.translate(-pipeCenterX, 0);
+        drawPipe(ctx, p, this.viewH, this.config.groundY, {
+          fill: this.theme.pipeFill,
+          stroke: this.theme.pipeStroke,
+          swing: !!p.swing,
+          time: this.elapsed,
+        });
+        ctx.restore();
+      } else {
+        drawPipe(ctx, p, this.viewH, this.config.groundY, {
+          fill: this.theme.pipeFill,
+          stroke: this.theme.pipeStroke,
+          swing: !!p.swing,
+          time: this.elapsed,
+        });
+      }
     }
 
     // 道具
@@ -842,6 +965,19 @@ export class GameEngine {
     }
     ctx.globalAlpha = 1;
 
+    // 飘字渲染
+    for (const ft of this.floatTexts) {
+      const alpha = clamp(ft.life / ft.maxLife, 0, 1);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = "#333";
+      ctx.font = "14px serif";
+      ctx.textAlign = "center";
+      ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+
     // 准备态提示
     if (this.phase === "ready") {
       ctx.save();
@@ -849,6 +985,14 @@ export class GameEngine {
       ctx.font = "300 18px 'Noto Serif SC', serif";
       ctx.textAlign = "center";
       ctx.fillText("轻点屏幕 / 按空格 起飞", this.viewW / 2, this.viewH * 0.18);
+      ctx.restore();
+    }
+
+    // 死亡灰白过渡
+    if (this.phase === "dead" || this.deathSlowTimer > 0) {
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255," + this.deathGrayscale + ")";
+      ctx.fillRect(0, 0, this.viewW, this.viewH);
       ctx.restore();
     }
 
@@ -901,4 +1045,10 @@ function circleRectHit(
   const dx = cx - nx;
   const dy = cy - ny;
   return dx * dx + dy * dy < r * r;
+}
+
+function easeOutBack(t: number): number {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
 }

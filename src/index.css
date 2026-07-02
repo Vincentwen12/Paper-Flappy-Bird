@@ -105,6 +105,15 @@ body::before {
   animation: fade-in 0.32s ease-out both;
 }
 
+/* 页面切换淡出 */
+@keyframes fade-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-8px); }
+}
+.page-exit {
+  animation: fade-out 0.2s ease-in both;
+}
+
 /* 礼花动画 */
 @keyframes confetti-fall {
   0% { transform: translateY(-40px) rotate(0deg); opacity: 0; }

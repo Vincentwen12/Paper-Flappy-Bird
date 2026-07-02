@@ -28,6 +28,7 @@ export interface PipeState {
   swingAmp: number;
   swingSpeed: number;
   phase: number;
+  spawnTime?: number; // 生成时间，用于入场弹性动画
 }
 
 export interface PowerUpState {
