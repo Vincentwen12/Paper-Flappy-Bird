@@ -8,7 +8,7 @@ import { GhostButton } from "@/components/GhostButton";
 import { PreviewBird } from "@/components/PreviewBird";
 import { findSkin } from "@/data/skins";
 import { useProfileStore } from "@/store/profileStore";
-import { Eye, EyeOff, Globe } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -18,8 +18,10 @@ export default function Auth() {
   const setSetting = useProfileStore((s) => s.setSetting);
   const skin = findSkin(profile.equippedSkin || "classic");
 
-  const hasAccount = auth.isRegistered;
-  const [isLogin, setIsLogin] = useState(hasAccount);
+  // 默认显示注册页（无账号时）或登录页（有账号时）
+  const [tab, setTab] = useState<"login" | "register">(
+    auth.isRegistered ? "login" : "register",
+  );
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -27,14 +29,14 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [phase, setPhase] = useState(0);
 
-  // If already logged in, redirect to home
+  // 已登录则跳转
   useEffect(() => {
     if (auth.isLoggedIn) {
       navigate("/", { replace: true });
     }
   }, [auth.isLoggedIn, navigate]);
 
-  // Bird preview animation
+  // 小鸟动画
   useEffect(() => {
     const id = setInterval(() => setPhase((p) => (p + 0.02) % 1), 16);
     return () => clearInterval(id);
@@ -45,9 +47,10 @@ export default function Auth() {
     setError(null);
     setLoading(true);
     try {
-      const result = isLogin
-        ? await auth.login(username, password)
-        : await auth.register(username, password);
+      const result =
+        tab === "login"
+          ? await auth.login(username, password)
+          : await auth.register(username, password);
       if (result.ok) {
         navigate("/", { replace: true });
       } else {
@@ -65,10 +68,17 @@ export default function Auth() {
     }
   };
 
+  const switchTab = (t: "login" | "register") => {
+    setTab(t);
+    setError(null);
+    setUsername("");
+    setPassword("");
+  };
+
   return (
-    <div className="page-enter w-full h-full flex flex-col items-center justify-center px-8 py-10">
-      <div className="flex flex-col items-center gap-8 max-w-sm w-full">
-        {/* Language switcher */}
+    <div className="page-enter w-full h-full flex flex-col items-center justify-center px-6 py-8">
+      <div className="flex flex-col items-center gap-6 max-w-sm w-full">
+        {/* 语言切换 */}
         <div className="flex gap-1 flex-wrap justify-center">
           {(Object.keys(LANG_LABELS) as Lang[]).map((l) => (
             <button
@@ -85,23 +95,42 @@ export default function Auth() {
           ))}
         </div>
 
-        {/* Bird preview */}
+        {/* 小鸟 */}
         <div className="relative">
-          <div className="absolute -inset-10 bg-sakura-200/20 rounded-full blur-3xl" />
-          <PreviewBird skin={skin} size={140} phase={phase} className="relative drop-shadow-[0_4px_12px_rgba(0,0,0,0.06)]" />
+          <div className="absolute -inset-8 bg-sakura-200/20 rounded-full blur-3xl" />
+          <PreviewBird skin={skin} size={120} phase={phase} className="relative drop-shadow-[0_4px_12px_rgba(0,0,0,0.06)]" />
         </div>
 
-        {/* Title */}
-        <div className="flex flex-col items-center gap-2">
-          <PaperTitle subtitle={t.auth.subtitle} align="center">
-            {t.auth.title}
-          </PaperTitle>
-          <div className="font-serif text-ink-200 text-sm tracking-widest">
-            {isLogin ? t.auth.loginTitle : t.auth.registerTitle}
-          </div>
+        {/* 标题 */}
+        <PaperTitle subtitle={t.auth.subtitle} align="center">
+          {t.auth.title}
+        </PaperTitle>
+
+        {/* 登录/注册 Tab 切换 */}
+        <div className="flex w-full border-b border-paper-300">
+          <button
+            onClick={() => switchTab("login")}
+            className={`flex-1 pb-3 text-sm font-serif tracking-widest transition-colors ${
+              tab === "login"
+                ? "text-ink-400 border-b-2 border-ink-400"
+                : "text-ink-50 hover:text-ink-200"
+            }`}
+          >
+            {t.auth.loginBtn}
+          </button>
+          <button
+            onClick={() => switchTab("register")}
+            className={`flex-1 pb-3 text-sm font-serif tracking-widest transition-colors ${
+              tab === "register"
+                ? "text-ink-400 border-b-2 border-ink-400"
+                : "text-ink-50 hover:text-ink-200"
+            }`}
+          >
+            {t.auth.registerBtn}
+          </button>
         </div>
 
-        {/* Form */}
+        {/* 表单 */}
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <label className="text-ink-50 text-[10px] font-sans tracking-[0.3em] uppercase">
@@ -112,7 +141,8 @@ export default function Auth() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder={t.auth.usernamePlaceholder}
-              maxLength={20}
+              maxLength={16}
+              autoComplete="username"
               className="w-full px-4 py-3 bg-paper-50 border border-paper-300 rounded-sm text-ink-400 font-serif text-sm tracking-wider placeholder:text-ink-50/50 focus:outline-none focus:border-ink-200 transition-colors"
             />
           </div>
@@ -128,6 +158,7 @@ export default function Auth() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={t.auth.passwordPlaceholder}
                 maxLength={32}
+                autoComplete={tab === "login" ? "current-password" : "new-password"}
                 className="w-full px-4 py-3 pr-12 bg-paper-50 border border-paper-300 rounded-sm text-ink-400 font-serif text-sm tracking-wider placeholder:text-ink-50/50 focus:outline-none focus:border-ink-200 transition-colors"
               />
               <button
@@ -154,22 +185,11 @@ export default function Auth() {
             disabled={loading}
             className="w-full mt-2"
           >
-            {loading ? "..." : isLogin ? t.auth.loginBtn : t.auth.registerBtn}
+            {loading ? "..." : tab === "login" ? t.auth.loginBtn : t.auth.registerBtn}
           </GhostButton>
         </form>
 
-        {/* Switch mode */}
-        <button
-          onClick={() => {
-            setIsLogin(!isLogin);
-            setError(null);
-          }}
-          className="text-ink-50 text-xs font-sans tracking-wider hover:text-ink-200 transition-colors"
-        >
-          {isLogin ? t.auth.switchToRegister : t.auth.switchToLogin}
-        </button>
-
-        <div className="text-ink-50/50 text-[10px] font-sans tracking-[0.4em] mt-4">
+        <div className="text-ink-50/50 text-[10px] font-sans tracking-[0.4em]">
           Paper Flap · v1.0
         </div>
       </div>

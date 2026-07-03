@@ -1,14 +1,12 @@
 import { create } from "zustand";
-import { storage } from "@/utils/storage";
 
-const ACCOUNTS_KEY = "accounts";
-const CURRENT_USER_KEY = "currentUser";
+const ACCOUNTS_KEY = "paper_flap_accounts";
+const CURRENT_USER_KEY = "paper_flap_currentUser";
 
 interface Accounts {
   [username: string]: string; // username -> hashed password
 }
 
-// Simple hash for local-only password storage
 function hashPassword(password: string): string {
   let hash = 0;
   for (let i = 0; i < password.length; i++) {
@@ -19,23 +17,36 @@ function hashPassword(password: string): string {
 }
 
 function loadAccounts(): Accounts {
-  return storage.get<Accounts>(ACCOUNTS_KEY, {});
+  try {
+    const raw = localStorage.getItem(ACCOUNTS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
 }
 
 function saveAccounts(accounts: Accounts): void {
-  storage.set(ACCOUNTS_KEY, accounts);
+  try {
+    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+  } catch { /* ignore */ }
 }
 
 function loadCurrentUser(): string | null {
-  return storage.get<string | null>(CURRENT_USER_KEY, null);
+  try {
+    return localStorage.getItem(CURRENT_USER_KEY);
+  } catch {
+    return null;
+  }
 }
 
 function saveCurrentUser(username: string | null): void {
-  if (username === null) {
-    storage.remove(CURRENT_USER_KEY);
-  } else {
-    storage.set(CURRENT_USER_KEY, username);
-  }
+  try {
+    if (username === null) {
+      localStorage.removeItem(CURRENT_USER_KEY);
+    } else {
+      localStorage.setItem(CURRENT_USER_KEY, username);
+    }
+  } catch { /* ignore */ }
 }
 
 interface AuthState {
@@ -47,7 +58,7 @@ interface AuthState {
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => {
+export const useAuthStore = create<AuthState>((set) => {
   const currentUser = loadCurrentUser();
   const accounts = loadAccounts();
 
@@ -57,8 +68,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     isRegistered: Object.keys(accounts).length > 0,
 
     login: async (username: string, password: string) => {
-      // Simulate async for consistency
-      await new Promise((r) => setTimeout(r, 300));
+      await new Promise((r) => setTimeout(r, 200));
 
       if (username.length < 2 || username.length > 16) {
         return { ok: false, error: "username_length" };
@@ -81,7 +91,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     },
 
     register: async (username: string, password: string) => {
-      await new Promise((r) => setTimeout(r, 300));
+      await new Promise((r) => setTimeout(r, 200));
 
       if (username.length < 2 || username.length > 16) {
         return { ok: false, error: "username_length" };
