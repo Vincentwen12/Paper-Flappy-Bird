@@ -22,7 +22,7 @@ export default function Auth() {
   const [tab, setTab] = useState<"login" | "register">(
     auth.isRegistered ? "login" : "register",
   );
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(auth.lastUsername || "");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState<string | null>(null);

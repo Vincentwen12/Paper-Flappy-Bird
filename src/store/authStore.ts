@@ -53,19 +53,21 @@ interface AuthState {
   username: string | null;
   isLoggedIn: boolean;
   isRegistered: boolean;
+  lastUsername: string | null;
   login: (username: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   register: (username: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => {
-  const currentUser = loadCurrentUser();
+  const lastUser = loadCurrentUser();
   const accounts = loadAccounts();
 
   return {
-    username: currentUser,
-    isLoggedIn: currentUser !== null,
+    username: null,
+    isLoggedIn: false,
     isRegistered: Object.keys(accounts).length > 0,
+    lastUsername: lastUser,
 
     login: async (username: string, password: string) => {
       await new Promise((r) => setTimeout(r, 200));
@@ -120,11 +122,12 @@ export const useAuthStore = create<AuthState>((set) => {
 });
 
 export function hydrateAuth() {
-  const currentUser = loadCurrentUser();
+  const lastUser = loadCurrentUser();
   const accounts = loadAccounts();
   useAuthStore.setState({
-    username: currentUser,
-    isLoggedIn: currentUser !== null,
+    username: null,
+    isLoggedIn: false,
     isRegistered: Object.keys(accounts).length > 0,
+    lastUsername: lastUser,
   });
 }
